@@ -87,6 +87,7 @@
   <h1>フィジカルAIノート</h1>
   <button class="primary" id="newBtn">＋ 新規ノート</button>
   <button id="seedBtn" title="同梱のフィジカルAIレポートを見出しごとにノートとして取り込みます">レポートを取り込む</button>
+  <button id="dailyBtn" title="サイトで公開中の日次ノートをまとめて取り込みます">日次ノートを取り込む</button>
   <label class="btn">Markdownを取り込む<input type="file" id="fileIn" accept=".md,.markdown,.txt" hidden></label>
   <button id="exportMd">Markdownで書き出し</button>
   <button id="exportJson">JSONで書き出し</button>
@@ -104,6 +105,7 @@
   <main id="main"></main>
 </div>
 
+<script src="markdown.js"></script>
 <script src="seed.js"></script>
 <script>
 (() => {
@@ -160,65 +162,8 @@
     return created;
   }
 
-  // ---------- Markdown 表示（簡易レンダラー） ----------
-  const esc = s => s.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  function inline(s) {
-    s = esc(s);
-    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
-    s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-    return s;
-  }
-  function render(md) {
-    const lines = md.split("\n");
-    const out = [];
-    let i = 0;
-    while (i < lines.length) {
-      const l = lines[i];
-      if (!l.trim()) { i++; continue; }
-      let m;
-      if ((m = l.match(/^(#{1,4})\s+(.*)/))) {
-        const n = Math.min(m[1].length + 1, 4);
-        out.push(`<h${n}>${inline(m[2])}</h${n}>`); i++;
-      } else if (/^-{3,}\s*$/.test(l)) {
-        out.push("<hr>"); i++;
-      } else if (/^>\s?/.test(l)) {
-        const buf = [];
-        while (i < lines.length && /^>\s?/.test(lines[i])) buf.push(lines[i++].replace(/^>\s?/, ""));
-        out.push(`<blockquote>${inline(buf.join(" "))}</blockquote>`);
-      } else if (/^\|/.test(l)) {
-        const rows = [];
-        while (i < lines.length && /^\|/.test(lines[i])) rows.push(lines[i++]);
-        const cells = r => r.replace(/^\||\|\s*$/g, "").split("|").map(c => c.trim());
-        let html = "<table>";
-        rows.forEach((r, idx) => {
-          if (/^\|[\s:|-]+\|?\s*$/.test(r)) return;
-          const tag = idx === 0 ? "th" : "td";
-          html += "<tr>" + cells(r).map(c => `<${tag}>${inline(c)}</${tag}>`).join("") + "</tr>";
-        });
-        out.push(html + "</table>");
-      } else if (/^\s*([-*]|\d+\.)\s+/.test(l)) {
-        const ordered = /^\s*\d+\./.test(l);
-        const items = [];
-        while (i < lines.length && /^\s*([-*]|\d+\.)\s+/.test(lines[i])) {
-          const indent = lines[i].match(/^\s*/)[0].length;
-          const text = inline(lines[i].replace(/^\s*([-*]|\d+\.)\s+/, ""));
-          if (indent >= 2 && items.length) items[items.length - 1].sub.push(text);
-          else items.push({ text, sub: [] });
-          i++;
-        }
-        const t = ordered ? "ol" : "ul";
-        out.push(`<${t}>` + items.map(it =>
-          `<li>${it.text}${it.sub.length ? "<ul>" + it.sub.map(s => `<li>${s}</li>`).join("") + "</ul>" : ""}</li>`
-        ).join("") + `</${t}>`);
-      } else {
-        const buf = [];
-        while (i < lines.length && lines[i].trim() && !/^(#|>|\||\s*([-*]|\d+\.)\s|-{3,})/.test(lines[i])) buf.push(lines[i++]);
-        out.push(`<p>${inline(buf.join(" "))}</p>`);
-      }
-    }
-    return out.join("\n");
-  }
+  const esc = globalThis.escapeHtml;
+  const render = globalThis.renderMarkdown;
 
   // ---------- 画面描画 ----------
   const $ = id => document.getElementById(id);
@@ -323,6 +268,29 @@
     if (!window.SEED_REPORT) return alert("seed.js が見つかりません。");
     const c = importMarkdown(window.SEED_REPORT, "レポート");
     selectedId = c[0].id; editing = false; renderAll();
+  };
+  $("dailyBtn").onclick = async () => {
+    let list;
+    try {
+      const res = await fetch("daily.json", { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      list = await res.json();
+    } catch {
+      return alert("日次ノートを読み込めませんでした。公開サイト上のアプリ（/app/）から開いてください。");
+    }
+    const ids = new Set(notes.map(n => n.id));
+    const added = list.filter(d => !ids.has("daily-" + d.date)).map(d => ({
+      id: "daily-" + d.date,
+      title: `${d.date} ${d.title}`,
+      body: d.body + (d.url ? `\n\n[記事ページを開く](${d.url})` : ""),
+      tags: ["日次ニュース", ...(d.tags || [])],
+      created: now(), updated: now(),
+    }));
+    notes = added.concat(notes);
+    save();
+    alert(`${added.length} 件の日次ノートを取り込みました。`);
+    if (added[0]) { selectedId = added[0].id; editing = false; }
+    renderAll();
   };
   $("fileIn").onchange = async e => {
     const f = e.target.files[0]; if (!f) return;
