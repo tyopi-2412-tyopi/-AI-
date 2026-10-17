@@ -6,6 +6,8 @@
 ## 0. 準備
 
 1. このリポジトリで作業し、ブランチ `claude/ecstatic-hamilton-l6szsy` を最新にします（`git pull`）。
+   - GitHub のユーザー名が `tyopi-2412-tyopi` から `tyopu-AI-tyopu` に変わりました。リポジトリの現在の場所は `tyopu-AI-tyopu/-AI-` です。
+   - git の remote URL は**変更しないでください**。Routine のセッションの push 権限は旧 URL（`tyopi-2412-tyopi/-AI-`）に紐付いていて、新 URL に変えると push が 403 で拒否されます。旧 URL への push は、GitHub が新しい場所へ自動で転送します（「This repository moved」と表示されますが、成功しています）。
 2. 今日の日付（日本時間）を `TZ=Asia/Tokyo date +%F` で確認します。以下では `<日付>` と書きます。
 3. すでに `content/daily/<日付>.md` があり、フロントマターが `generator: "routine"` の場合は、今日の分は作成済みです。何もせずに終了します。
 
