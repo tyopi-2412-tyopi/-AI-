@@ -34,13 +34,13 @@
 
 1. **GitHub Pages**: Settings → Pages の Source を「GitHub Actions」にします。
 2. **収益化の設定**: `config/monetization.json` に、note のURLなどを記入します。公開URLが決まったら `siteUrl` も入れてください（RSS と canonical に使います）。
-3. **Routine**: Claude の Routine「フィジカルAI 朝刊」が毎朝 7:40 に新しいセッションを起動します。一覧・停止・時刻の変更は claude.ai の Routines 画面から行えます。
+3. **Routine**: Claude の Routine「フィジカルAI 朝刊」が、毎朝 7:40 に専用セッション「フィジカルAI 朝刊（Routine 実行用）」へ作業を依頼します。このセッションにはリポジトリと、このブランチへの push 権限が付いています。毎日同じセッションで続けて作業するため、セッションを削除・アーカイブしないでください。一覧・停止・時刻の変更は claude.ai の Routines 画面から行えます。
 
 Claude API キーは不要です（記事は Routine の中で Claude が書きます）。
 
 ## 毎日の運用（note への投稿）
 
-1. 毎朝、Routine の完了通知が届きます。そのセッションを開きます。
+1. 毎朝、完了通知が届きます。専用セッション「フィジカルAI 朝刊（Routine 実行用）」を開きます（その日の分は一番下にあります）。
 2. 最終返信にある原稿の1行目をタイトルに、残りを note の本文に貼り付けます。
 3. 「▼ ここから有料」の位置に有料エリアの線を引き、価格を設定して公開します。
 4. （任意）`content/daily/<日付>.md` のフロントマターに `noteUrl: "https://note.com/..."` を追記すると、サイトから直接その記事に誘導できます。
