@@ -43,3 +43,18 @@ test("フロントマターの往復", () => {
   const meta = { title: "a: b", tags: ["x"], sources: 3, hasPaid: true };
   assert.deepEqual(parseFrontmatter(toFrontmatter(meta) + "\nbody").meta, meta);
 });
+
+import { weightedLength, intentUrl, parseDraft } from "./xpost.js";
+
+test("X の文字数（日本語は2、URLは23）", () => {
+  assert.equal(weightedLength("abc"), 3);
+  assert.equal(weightedLength("日本語"), 6);
+  assert.equal(weightedLength("見て https://example.com/very/long/path?x=1"), 2 * 2 + 1 + 23);
+});
+
+test("X の投稿文を本文とリプライに分け、投稿リンクを作る", () => {
+  const d = parseDraft("MAIN:\n今日の要点\n#フィジカルAI\n\nREPLY:\n続きはこちら {URL}\n");
+  assert.equal(d.main, "今日の要点\n#フィジカルAI");
+  assert.equal(d.reply, "続きはこちら {URL}");
+  assert.equal(intentUrl("a b#c"), "https://x.com/intent/post?text=a%20b%23c");
+});
