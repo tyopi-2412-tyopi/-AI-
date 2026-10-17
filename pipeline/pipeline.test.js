@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseFeed } from "./rss.js";
 import { score, keyOf } from "./collect.js";
-import { splitArticle } from "./write.js";
+import { splitArticle } from "./save.js";
 import { parseFrontmatter, toFrontmatter, PAID_MARKER } from "./lib.js";
 
 test("RSS 2.0 をパースできる", () => {

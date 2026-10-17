@@ -3,17 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "フィジカルAIのニュースを毎日収集し、ノート（記事）化して公開・販売するためのパイプライン",
-  "engines": { "node": ">=20" },
+  "description": "フィジカルAIのニュースを毎日収集し、Claude の Routine でノート（記事）化して公開・販売するためのパイプライン",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "collect": "node pipeline/collect.js",
-    "write": "node pipeline/write.js",
+    "save": "node pipeline/save.js",
     "build": "node pipeline/build.js",
-    "daily": "node pipeline/collect.js && node pipeline/write.js && node pipeline/build.js",
     "seed": "node app/build-seed.js",
     "test": "node --test pipeline/*.test.js"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.133.0"
   }
 }
